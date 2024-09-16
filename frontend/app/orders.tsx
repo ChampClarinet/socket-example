@@ -1,4 +1,4 @@
-// components/OrdersTable.tsx
+"use client"; // components/OrdersTable.tsx
 import React from "react";
 import { useData } from "./hook";
 

@@ -9,7 +9,13 @@ const validator = t.Object({
 });
 
 export const CRUDHandler = new Elysia()
-  .post("/", ({ body }) => {}, {
+  .onAfterHandle(({ request }) => {
+    if (request.method != "GET") broadcast();
+  })
+  .post("/", ({ body }) => {
+    const target = db.query(`INSERT INTO orders (customer, details, amountDue, createdAt, updatedAt) VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`).run(body.customer, body.details, body.amountDue);
+    return { id: target.lastInsertRowid };
+  }, {
     body: validator,
   })
   .patch(
@@ -50,7 +56,6 @@ export const CRUDHandler = new Elysia()
 
       db.query(stmt).run(...args);
       set.status = 204;
-      broadcast();
       return null;
     },
     {
@@ -69,10 +74,9 @@ export const CRUDHandler = new Elysia()
     return null;
   })
   .get("/", () => {
-    return db.query(`SELECT * FROM orders WHERE deletedAt IS NULL ORDER BY updatedAt DESC`).all();
-  })
-  .onAfterHandle(({ request }) => {
-    if (request.method != "GET") {
-      broadcast();
-    }
+    return db
+      .query(
+        `SELECT * FROM orders WHERE deletedAt IS NULL ORDER BY updatedAt DESC`
+      )
+      .all();
   });
