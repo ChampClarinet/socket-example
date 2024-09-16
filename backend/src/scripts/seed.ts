@@ -15,6 +15,16 @@ const runScript = async () => {
   //           );
   //           `
   // ).run();
+//   db.query(
+//     `CREATE TRIGGER update_timestamp
+// AFTER UPDATE ON orders
+// FOR EACH ROW
+// BEGIN
+//   UPDATE orders
+//   SET updatedAt = CURRENT_TIMESTAMP
+//   WHERE id = OLD.id;
+// END;`
+//   ).run();
 
   const stmt = `INSERT INTO orders (id, customer, details, amountDue, createdAt, updatedAt, deletedAt)
             VALUES
