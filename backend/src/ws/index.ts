@@ -1,16 +1,16 @@
 import { Elysia } from "elysia";
 import db from "../db";
-
-const clients: Set<any> = new Set();
+import { Server } from "bun";
 
 export const ws = new Elysia().ws("/ws", {
   open(ws) {
     console.log(ws.id + " is connected");
-    clients.add(ws);
-    broadcast();
+    ws.subscribe("orders");
+    ws.send(JSON.stringify(get()));
   },
   close(ws) {
     console.log(ws.id + " is disconnected");
+    ws.unsubscribe("orders");
   },
   message(ws, message) {
     console.log(ws.id + " sends: " + message);
@@ -18,11 +18,15 @@ export const ws = new Elysia().ws("/ws", {
 });
 
 const get = () => {
-  return db.query(`SELECT * FROM orders WHERE deletedAt IS NULL ORDER BY updatedAt DESC`).all();
+  return db
+    .query(
+      `SELECT * FROM orders WHERE deletedAt IS NULL ORDER BY updatedAt DESC`
+    )
+    .all();
 };
 
-export const broadcast = () => {
+export const broadcast = (server: Server) => {
   const data = get();
 
-  clients.forEach((ws) => ws.send(data));
+  server.publish("orders", JSON.stringify(data));
 };

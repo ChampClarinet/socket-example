@@ -9,15 +9,23 @@ const validator = t.Object({
 });
 
 export const CRUDHandler = new Elysia()
-  .onAfterHandle(({ request }) => {
-    if (request.method != "GET") broadcast();
+  .onAfterHandle(({ request, server }) => {
+    if (request.method != "GET" && !!server) broadcast(server);
   })
-  .post("/", ({ body }) => {
-    const target = db.query(`INSERT INTO orders (customer, details, amountDue, createdAt, updatedAt) VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`).run(body.customer, body.details, body.amountDue);
-    return { id: target.lastInsertRowid };
-  }, {
-    body: validator,
-  })
+  .post(
+    "/",
+    ({ body }) => {
+      const target = db
+        .query(
+          `INSERT INTO orders (customer, details, amountDue, createdAt, updatedAt) VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+        )
+        .run(body.customer, body.details, body.amountDue);
+      return { id: target.lastInsertRowid };
+    },
+    {
+      body: validator,
+    }
+  )
   .patch(
     "/:id",
     ({ body, params: { id }, set }) => {
